@@ -70,8 +70,6 @@ def main():
         if result.returncode != 0:
             print(f"\n[ERROR] Technique {num} exited with code {result.returncode}")
 
-        input(f"\n--- Press Enter to continue to next technique ---")
-
 
 if __name__ == "__main__":
     main()
