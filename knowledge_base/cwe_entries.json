@@ -1,0 +1,402 @@
+[
+    {
+        "id": "CWE-78",
+        "name": "OS Command Injection",
+        "description": "The application constructs OS commands using externally-influenced input without proper neutralization, allowing attackers to execute arbitrary commands.",
+        "detection_patterns": [
+            "system() calls with user-controlled input",
+            "exec(), popen(), shell_exec() with unsanitized arguments",
+            "subprocess with shell=True and user input",
+            "backtick operators with user-controlled strings",
+            "String concatenation or interpolation used to build shell commands"
+        ],
+        "languages": ["C", "Python", "PHP", "Java", "Ruby"],
+        "severity": "Critical",
+        "examples": [
+            "system(user_input)",
+            "os.system('cmd ' + user_data)",
+            "shell_exec($_GET['cmd'])",
+            "subprocess.check_output(cmd, shell=True)"
+        ],
+        "remediation": "Use parameterized APIs that avoid the shell. Use allowlists for permitted commands. Validate and sanitize all inputs used in command construction."
+    },
+    {
+        "id": "CWE-89",
+        "name": "SQL Injection",
+        "description": "The application constructs SQL queries using user-controlled input without proper neutralization, allowing attackers to modify query logic.",
+        "detection_patterns": [
+            "String concatenation in SQL queries",
+            "f-strings or format strings containing SQL with user input",
+            "Missing parameterized queries / prepared statements",
+            "Direct insertion of request parameters into queries",
+            "Custom sanitize functions instead of parameterized queries"
+        ],
+        "languages": ["Python", "PHP", "Java", "C#", "Ruby"],
+        "severity": "Critical",
+        "examples": [
+            "query = 'SELECT * FROM users WHERE name = \\'' + username + '\\''",
+            "$conn->query(\"SELECT * FROM users WHERE id = $id\")",
+            "cursor.execute(f\"SELECT * FROM users WHERE name = '{name}'\")"
+        ],
+        "remediation": "Use parameterized queries or prepared statements. Use ORM frameworks. Never concatenate user input directly into SQL."
+    },
+    {
+        "id": "CWE-79",
+        "name": "Cross-Site Scripting (XSS)",
+        "description": "The application includes user-controllable input in web output without proper encoding, allowing execution of malicious scripts in other users' browsers.",
+        "detection_patterns": [
+            "User input echoed directly in HTML without encoding",
+            "Template variables marked as 'safe' or using raw output",
+            "innerHTML assignments with user-controlled data",
+            "Reflected query parameters in page output",
+            "Stored user content rendered without sanitization"
+        ],
+        "languages": ["PHP", "Python", "JavaScript", "Java"],
+        "severity": "High",
+        "examples": [
+            "echo $_GET['query']",
+            "{{ user_input | safe }}",
+            "document.innerHTML = userData",
+            "render_template_string with user input marked safe"
+        ],
+        "remediation": "Encode output based on context (HTML, JS, URL, CSS). Use auto-escaping template engines. Implement Content-Security-Policy headers."
+    },
+    {
+        "id": "CWE-120",
+        "name": "Buffer Overflow",
+        "description": "The program copies input to a buffer without checking that the input size is within the buffer's bounds, potentially allowing code execution.",
+        "detection_patterns": [
+            "strcpy() without length checking",
+            "gets() usage (always unsafe)",
+            "sprintf() without bounds checking",
+            "read() or recv() with size larger than buffer",
+            "Missing bounds checks on array indices",
+            "memcpy with unchecked source size"
+        ],
+        "languages": ["C", "C++"],
+        "severity": "Critical",
+        "examples": [
+            "strcpy(buffer, user_input)",
+            "gets(input)",
+            "read(fd, buf, size_larger_than_buf)",
+            "sprintf(buf, '%s', long_string)"
+        ],
+        "remediation": "Use bounded functions (strncpy, snprintf, fgets). Validate buffer sizes before copy operations. Use safe string libraries."
+    },
+    {
+        "id": "CWE-134",
+        "name": "Uncontrolled Format String",
+        "description": "The software uses a function that accepts a format string as an argument, but the format string originates from an external source.",
+        "detection_patterns": [
+            "printf(user_string) without format specifier",
+            "fprintf(file, user_string)",
+            "syslog(priority, user_string)",
+            "Format functions where first arg is user-controlled"
+        ],
+        "languages": ["C", "C++"],
+        "severity": "High",
+        "examples": [
+            "printf(buffer)",
+            "fprintf(log, user_input)",
+            "syslog(LOG_ERR, user_message)"
+        ],
+        "remediation": "Always use format specifiers: printf('%s', user_string). Never pass user-controlled strings as format arguments."
+    },
+    {
+        "id": "CWE-416",
+        "name": "Use After Free",
+        "description": "The program continues to use memory after it has been freed, leading to undefined behavior and potential code execution.",
+        "detection_patterns": [
+            "Pointer used after free() without being set to NULL",
+            "Array entries not cleared after freeing pointed-to memory",
+            "Freed objects still referenced through aliases",
+            "Conditional free paths where pointer may still be used"
+        ],
+        "languages": ["C", "C++"],
+        "severity": "Critical",
+        "examples": [
+            "free(ptr); use(ptr);",
+            "free(array[i]); /* array[i] still accessible */",
+            "free(user->token); /* user->token still dereferenceable */"
+        ],
+        "remediation": "Set pointers to NULL after freeing. Clear container entries. Use RAII in C++. Consider using smart pointers."
+    },
+    {
+        "id": "CWE-190",
+        "name": "Integer Overflow",
+        "description": "An integer calculation can produce a value that is outside the range of the integer type, leading to unexpected wrapping behavior.",
+        "detection_patterns": [
+            "Multiplication of integers without overflow checking",
+            "Arithmetic used for buffer size calculations",
+            "Signed integer used where unsigned expected",
+            "No validation of integer inputs before arithmetic"
+        ],
+        "languages": ["C", "C++", "Java"],
+        "severity": "High",
+        "examples": [
+            "int result = a * b; /* no overflow check */",
+            "size_t size = count * element_size;",
+            "int interest = balance * rate;"
+        ],
+        "remediation": "Use safe integer arithmetic libraries. Check for overflow before performing arithmetic. Use wider types for intermediate calculations."
+    },
+    {
+        "id": "CWE-362",
+        "name": "Race Condition (TOCTOU)",
+        "description": "The program checks a condition and then acts on it, but the condition can change between the check and the action, leading to security issues.",
+        "detection_patterns": [
+            "Check-then-act patterns without synchronization",
+            "File existence checks followed by file operations",
+            "Balance or permission checks followed by modifications without locking",
+            "usleep/sleep between check and action"
+        ],
+        "languages": ["C", "C++", "Python", "Java"],
+        "severity": "Medium",
+        "examples": [
+            "if (balance >= amount) { sleep(1); balance -= amount; }",
+            "if (access(file, R_OK)) { fd = open(file, O_RDONLY); }",
+            "Check permission then modify without lock"
+        ],
+        "remediation": "Use atomic operations or proper locking mechanisms. Implement mutex/semaphore protection for shared resources."
+    },
+    {
+        "id": "CWE-502",
+        "name": "Insecure Deserialization",
+        "description": "The application deserializes untrusted data without verification, which can result in arbitrary code execution.",
+        "detection_patterns": [
+            "pickle.loads() with user-controlled input",
+            "unserialize() in PHP with user data",
+            "yaml.load() without SafeLoader",
+            "ObjectInputStream with untrusted data",
+            "JSON deserialization into executable types"
+        ],
+        "languages": ["Python", "PHP", "Java", "Ruby"],
+        "severity": "Critical",
+        "examples": [
+            "pickle.loads(user_data)",
+            "unserialize($_POST['data'])",
+            "yaml.load(user_string)"
+        ],
+        "remediation": "Never deserialize untrusted data. Use safe serialization formats (JSON). Implement integrity checks on serialized data."
+    },
+    {
+        "id": "CWE-918",
+        "name": "Server-Side Request Forgery (SSRF)",
+        "description": "The application makes HTTP requests to a URL controlled by the attacker, allowing access to internal services.",
+        "detection_patterns": [
+            "URL fetching with user-controlled URLs",
+            "urllib.request.urlopen with user input",
+            "file_get_contents with user-controlled URL",
+            "curl_exec with user-supplied URL",
+            "No URL allowlist or scheme validation"
+        ],
+        "languages": ["Python", "PHP", "Java", "Ruby"],
+        "severity": "High",
+        "examples": [
+            "urllib.request.urlopen(user_url)",
+            "file_get_contents($_GET['url'])",
+            "requests.get(user_provided_url)"
+        ],
+        "remediation": "Implement URL allowlists. Validate URL schemes (reject file://, gopher://). Block requests to internal/private IP ranges."
+    },
+    {
+        "id": "CWE-22",
+        "name": "Path Traversal",
+        "description": "The application uses user input to construct file paths without proper validation, allowing access to files outside intended directories.",
+        "detection_patterns": [
+            "File paths constructed with user input",
+            "No validation for '..' sequences",
+            "send_file() or readfile() with user-controlled paths",
+            "open() with user-controlled filename",
+            "No path canonicalization before access"
+        ],
+        "languages": ["Python", "PHP", "Java", "C", "Ruby"],
+        "severity": "High",
+        "examples": [
+            "send_file(request.args.get('file'))",
+            "readfile('/uploads/' . $_GET['file'])",
+            "fopen('/var/data/' + user_path, 'r')"
+        ],
+        "remediation": "Canonicalize paths and verify they stay within intended directory. Use allowlists for permitted files. Strip or reject path traversal sequences."
+    },
+    {
+        "id": "CWE-798",
+        "name": "Hardcoded Credentials",
+        "description": "The application contains hardcoded passwords, API keys, or cryptographic keys in source code.",
+        "detection_patterns": [
+            "Password strings assigned in source code",
+            "API keys or tokens as string literals",
+            "Connection strings with embedded credentials",
+            "Hardcoded encryption keys or IVs",
+            "Default admin credentials in initialization code"
+        ],
+        "languages": ["All"],
+        "severity": "High",
+        "examples": [
+            "PASSWORD = 'admin123'",
+            "api_key = 'sk_live_abc123'",
+            "mysql://root:password@localhost/db",
+            "#define ADMIN_PASSWORD 'secret'"
+        ],
+        "remediation": "Use environment variables or secure vaults for secrets. Implement key management systems. Never commit credentials to source control."
+    },
+    {
+        "id": "CWE-327",
+        "name": "Use of Broken Cryptographic Algorithm",
+        "description": "The application uses a cryptographic algorithm that is known to be weak or broken.",
+        "detection_patterns": [
+            "MD5 used for password hashing",
+            "SHA1 used for security purposes",
+            "DES or RC4 encryption",
+            "ECB mode encryption",
+            "Static or predictable initialization vectors",
+            "Custom or rolled crypto implementations"
+        ],
+        "languages": ["All"],
+        "severity": "High",
+        "examples": [
+            "hashlib.md5(password)",
+            "sha1($password)",
+            "DES.encrypt(data)",
+            "AES with static IV"
+        ],
+        "remediation": "Use bcrypt, scrypt, or argon2 for password hashing. Use AES-256-GCM for encryption. Use cryptographically secure random IVs."
+    },
+    {
+        "id": "CWE-284",
+        "name": "Improper Access Control",
+        "description": "The application does not properly restrict access to resources, allowing unauthorized users to perform privileged operations.",
+        "detection_patterns": [
+            "Missing authorization checks on sensitive endpoints",
+            "Client-side only authorization (cookie-based role checks)",
+            "IDOR - direct object references without ownership validation",
+            "Missing CSRF tokens on state-changing operations",
+            "API endpoints returning data without permission checks"
+        ],
+        "languages": ["All"],
+        "severity": "High",
+        "examples": [
+            "if cookie['role'] == 'admin'",
+            "get_note(note_id) without checking user owns it",
+            "DELETE endpoint with no auth check",
+            "Role check via client cookie instead of server session"
+        ],
+        "remediation": "Implement server-side authorization. Validate resource ownership. Use CSRF tokens. Never trust client-side role indicators."
+    },
+    {
+        "id": "CWE-200",
+        "name": "Information Exposure",
+        "description": "The application exposes sensitive information to unauthorized users through error messages, debug endpoints, or data leaks.",
+        "detection_patterns": [
+            "Debug mode enabled in production",
+            "Verbose error messages with stack traces",
+            "Debug endpoints exposing user data",
+            "Credentials or tokens in log files",
+            "Connection strings printed to output",
+            "display_errors enabled in PHP"
+        ],
+        "languages": ["All"],
+        "severity": "Medium",
+        "examples": [
+            "app.config['DEBUG'] = True",
+            "ini_set('display_errors', 1)",
+            "print(f'Connecting to: {DB_CONNECTION}')",
+            "/debug/users endpoint returning all user data"
+        ],
+        "remediation": "Disable debug mode in production. Implement proper error handling. Remove debug endpoints. Sanitize log output."
+    },
+    {
+        "id": "CWE-94",
+        "name": "Code Injection",
+        "description": "The application constructs code from user input and executes it, allowing arbitrary code execution.",
+        "detection_patterns": [
+            "eval() with user-controlled input",
+            "exec() with user strings",
+            "include/require with user-controlled paths",
+            "Dynamic code generation from user input"
+        ],
+        "languages": ["PHP", "Python", "JavaScript", "Ruby"],
+        "severity": "Critical",
+        "examples": [
+            "eval($_POST['code'])",
+            "exec(user_input)",
+            "include($user_controlled_path)",
+            "eval(request.form['expr'])"
+        ],
+        "remediation": "Never execute code derived from user input. Use allowlists for dynamic includes. Implement sandboxed execution environments if dynamic code is required."
+    },
+    {
+        "id": "CWE-611",
+        "name": "XML External Entity (XXE)",
+        "description": "The application parses XML input that can reference external entities, leading to data disclosure or SSRF.",
+        "detection_patterns": [
+            "XML parsing without disabling external entities",
+            "DOM or SAX parsers with default configurations",
+            "XSLT processing with user-controlled stylesheets"
+        ],
+        "languages": ["Java", "Python", "PHP", "C#"],
+        "severity": "High",
+        "examples": [
+            "etree.parse(user_xml)",
+            "DocumentBuilderFactory with default settings",
+            "simplexml_load_string($user_input)"
+        ],
+        "remediation": "Disable external entity processing. Use JSON instead of XML where possible. Configure parsers securely."
+    },
+    {
+        "id": "CWE-352",
+        "name": "Cross-Site Request Forgery (CSRF)",
+        "description": "The application does not validate that state-changing requests originate from the application itself, allowing attackers to forge requests.",
+        "detection_patterns": [
+            "State-changing operations via GET requests",
+            "POST endpoints without CSRF token validation",
+            "No SameSite cookie attribute",
+            "DELETE or UPDATE operations without origin validation",
+            "Forms without anti-CSRF tokens"
+        ],
+        "languages": ["All web frameworks"],
+        "severity": "Medium",
+        "examples": [
+            "GET /admin/delete_user?id=1 with no token",
+            "POST /transfer without CSRF token",
+            "<form method='POST'> with no hidden token field"
+        ],
+        "remediation": "Implement CSRF tokens on all state-changing requests. Use SameSite cookie attribute. Validate Origin/Referer headers."
+    },
+    {
+        "id": "CWE-776",
+        "name": "Improper Restriction of Recursive Entity References",
+        "description": "The application allows recursive or circular references in data structures, leading to resource exhaustion.",
+        "detection_patterns": [
+            "Recursive data processing without depth limits",
+            "No maximum recursion depth on user-controlled structures",
+            "Unbounded JSON/XML depth parsing"
+        ],
+        "languages": ["All"],
+        "severity": "Medium",
+        "examples": [
+            "Billion laughs XML attack",
+            "Deeply nested JSON without depth limit"
+        ],
+        "remediation": "Set maximum recursion depth. Limit entity expansion. Validate input structure depth."
+    },
+    {
+        "id": "CWE-732",
+        "name": "Incorrect Permission Assignment",
+        "description": "The application creates files or resources with permissions that are more permissive than necessary.",
+        "detection_patterns": [
+            "World-readable/writable files containing sensitive data",
+            "Log files with sensitive info and broad permissions",
+            "Temp files without restricted permissions",
+            "Overly permissive CORS policies"
+        ],
+        "languages": ["All"],
+        "severity": "Medium",
+        "examples": [
+            "fopen('/tmp/sensitive.log', 'a') with default umask",
+            "Access-Control-Allow-Origin: *",
+            "chmod 777 on sensitive files"
+        ],
+        "remediation": "Apply principle of least privilege. Set restrictive file permissions. Use specific CORS origins."
+    }
+]
