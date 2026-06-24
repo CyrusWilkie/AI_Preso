@@ -27,7 +27,7 @@ from itertools import combinations
 from code_parser import extract_functions
 from results_saver import save_results
 
-OLLAMA_HOST = "http://192.168.0.195:11434"
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:7b")
 KNOWLEDGE_BASE_PATH = "../knowledge_base/cwe_entries.json"
 
